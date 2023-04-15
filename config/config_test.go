@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/heaven-chp/common-library-go/json"
 	"testing"
+
+	"github.com/heaven-chp/common-library-go/json"
 )
 
 func TestGrpcClient(t *testing.T) {
