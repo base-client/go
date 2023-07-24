@@ -15,18 +15,18 @@ type Main struct {
 	socketClientConfig config.SocketClient
 }
 
-func (main *Main) Initialize() error {
-	err := main.initializeFlag()
+func (this *Main) initialize() error {
+	err := this.initializeFlag()
 	if err != nil {
 		return err
 	}
 
-	err = main.initializeConfig()
+	err = this.initializeConfig()
 	if err != nil {
 		return err
 	}
 
-	err = main.initializeLog()
+	err = this.initializeLog()
 	if err != nil {
 		return err
 	}
@@ -34,11 +34,11 @@ func (main *Main) Initialize() error {
 	return nil
 }
 
-func (main *Main) Finalize() {
-	defer main.finalizeLog()
+func (this *Main) finalize() error {
+	return this.finalizeLog()
 }
 
-func (main *Main) initializeFlag() error {
+func (this *Main) initializeFlag() error {
 	configFile := flag.String("config_file", "", "config file")
 	flag.Parse()
 
@@ -47,74 +47,79 @@ func (main *Main) initializeFlag() error {
 		return errors.New("invalid flag")
 	}
 
-	main.configFile = *configFile
+	this.configFile = *configFile
 
 	return nil
 }
 
-func (main *Main) initializeConfig() error {
-	return config.Parsing(&main.socketClientConfig, main.configFile)
+func (this *Main) initializeConfig() error {
+	return config.Parsing(&this.socketClientConfig, this.configFile)
 }
 
-func (main *Main) initializeLog() error {
-	level, err := log.ToIntLevel(main.socketClientConfig.LogLevel)
+func (this *Main) initializeLog() error {
+	level, err := log.ToIntLevel(this.socketClientConfig.LogLevel)
 	if err != nil {
 		return err
 	}
 
-	return log.Initialize(level, main.socketClientConfig.LogOutputPath, main.socketClientConfig.LogFileNamePrefix)
+	return log.Initialize(level, this.socketClientConfig.LogOutputPath, this.socketClientConfig.LogFileNamePrefix)
 }
 
-func (main *Main) finalizeLog() {
-	defer log.Finalize()
-
+func (this *Main) finalizeLog() error {
 	log.Flush()
+
+	return log.Finalize()
 }
 
-func (main *Main) Run() {
+func (this *Main) job() error {
 	var client socket.Client
 	defer client.Close()
 
-	err := client.Connect("tcp", main.socketClientConfig.Address)
+	err := client.Connect("tcp", this.socketClientConfig.Address)
 	if err != nil {
-		log.Error(err.Error())
-		return
+		return err
 	}
 
 	readData, err := client.Read(1024)
 	if err != nil {
-		log.Error(err.Error())
-		return
+		return err
 	}
 	log.Info("read : (%s)", readData)
 
 	writeData := "test"
 	_, err = client.Write(writeData)
 	if err != nil {
-		log.Error(err.Error())
-		return
+		return err
 	}
 	log.Info("write : (%s)", writeData)
 
 	readData, err = client.Read(1024)
 	if err != nil {
-		log.Error(err.Error())
-		return
+		return err
 	}
 	log.Info("read : (%s)", readData)
+
+	return nil
 }
 
-func main() {
-	var main Main
-	err := main.Initialize()
+func (this *Main) Run() error {
+	err := this.initialize()
 	if err != nil {
-		log.Error("Initialize fail - error : (%s)", err.Error())
-		return
+		return err
 	}
-	defer main.Finalize()
+	defer this.finalize()
 
 	log.Info("process start")
 	defer log.Info("process end")
 
-	main.Run()
+	return this.job()
+}
+
+func main() {
+	main := Main{}
+
+	err := main.Run()
+	if err != nil {
+		log.Error(err.Error())
+	}
 }
