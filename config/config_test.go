@@ -22,7 +22,7 @@ func TestGrpcClient(t *testing.T) {
 		t.Errorf("invalid data - LogOutputPath : (%s)", grpcClient.LogOutputPath)
 	}
 
-	if grpcClient.LogFileNamePrefix != "grpc_client" {
+	if grpcClient.LogFileNamePrefix != "grpc-client" {
 		t.Errorf("invalid data - LogFileNamePrefix : (%s)", grpcClient.LogFileNamePrefix)
 	}
 
@@ -51,7 +51,7 @@ func TestSocketClient(t *testing.T) {
 		t.Errorf("invalid data - LogOutputPath : (%s)", socketClient.LogOutputPath)
 	}
 
-	if socketClient.LogFileNamePrefix != "socket_client" {
+	if socketClient.LogFileNamePrefix != "socket-client" {
 		t.Errorf("invalid data - LogFileNamePrefix : (%s)", socketClient.LogFileNamePrefix)
 	}
 
