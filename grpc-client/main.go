@@ -9,7 +9,6 @@ import (
 	"github.com/heaven-chp/base-client-go/config"
 	"github.com/heaven-chp/common-library-go/grpc"
 	"github.com/heaven-chp/common-library-go/grpc/sample"
-	"github.com/heaven-chp/common-library-go/json"
 	"github.com/heaven-chp/common-library-go/log"
 )
 
@@ -19,18 +18,18 @@ type Main struct {
 	grpcClientConfig config.GrpcClient
 }
 
-func (main *Main) Initialize() error {
-	err := main.initializeFlag()
+func (this *Main) initialize() error {
+	err := this.initializeFlag()
 	if err != nil {
 		return err
 	}
 
-	err = main.initializeConfig()
+	err = this.initializeConfig()
 	if err != nil {
 		return err
 	}
 
-	err = main.initializeLog()
+	err = this.initializeLog()
 	if err != nil {
 		return err
 	}
@@ -38,11 +37,11 @@ func (main *Main) Initialize() error {
 	return nil
 }
 
-func (main *Main) Finalize() {
-	defer main.finalizeLog()
+func (this *Main) finalize() error {
+	return this.finalizeLog()
 }
 
-func (main *Main) initializeFlag() error {
+func (this *Main) initializeFlag() error {
 	configFile := flag.String("config_file", "", "config file")
 	flag.Parse()
 
@@ -51,39 +50,38 @@ func (main *Main) initializeFlag() error {
 		return errors.New("invalid flag")
 	}
 
-	main.configFile = *configFile
+	this.configFile = *configFile
 
 	return nil
 }
 
-func (main *Main) initializeConfig() error {
-	return json.ToStructFromFile(main.configFile, &main.grpcClientConfig)
+func (this *Main) initializeConfig() error {
+	return config.Parsing(&this.grpcClientConfig, this.configFile)
 }
 
-func (main *Main) initializeLog() error {
-	level, err := log.ToIntLevel(main.grpcClientConfig.LogLevel)
+func (this *Main) initializeLog() error {
+	level, err := log.ToIntLevel(this.grpcClientConfig.LogLevel)
 	if err != nil {
 		return err
 	}
 
-	return log.Initialize(level, main.grpcClientConfig.LogOutputPath, main.grpcClientConfig.LogFileNamePrefix)
+	return log.Initialize(level, this.grpcClientConfig.LogOutputPath, this.grpcClientConfig.LogFileNamePrefix)
 }
 
-func (main *Main) finalizeLog() {
-	defer log.Finalize()
-
+func (this *Main) finalizeLog() error {
 	log.Flush()
+
+	return log.Finalize()
 }
 
-func (main *Main) Run() {
-	timeout := main.grpcClientConfig.Timeout
+func (this *Main) job() error {
+	timeout := this.grpcClientConfig.Timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 
-	connection, err := grpc.GetConnection(main.grpcClientConfig.Address)
+	connection, err := grpc.GetConnection(this.grpcClientConfig.Address)
 	if err != nil {
-		log.Error(err.Error())
-		return
+		return err
 	}
 	defer connection.Close()
 
@@ -92,25 +90,34 @@ func (main *Main) Run() {
 	request := sample.Request{Data1: 1, Data2: "abc"}
 	reply, err := client.Func(ctx, &request)
 	if err != nil {
-		log.Error("Func fail - error : %s", err.Error())
-		return
+		return err
 	}
 
 	log.Info("request - Data1 : (%d), Data2 : (%s)", request.Data1, request.Data2)
 	log.Info("reply - Data1 : (%d), Data2 : (%s)", reply.Data1, reply.Data2)
+
+	return nil
 }
 
-func main() {
-	var main Main
-	err := main.Initialize()
+func (this *Main) Run() error {
+	err := this.initialize()
 	if err != nil {
-		log.Error("Initialize fail - error : (%s)", err.Error())
-		return
+		return err
 	}
-	defer main.Finalize()
+	defer this.finalize()
 
 	log.Info("process start")
 	defer log.Info("process end")
 
-	main.Run()
+	return this.job()
+}
+
+func main() {
+	main := Main{}
+
+	err := main.Run()
+	if err != nil {
+		log.Error(err.Error())
+	}
+
 }
