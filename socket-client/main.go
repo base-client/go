@@ -5,7 +5,6 @@ import (
 	"flag"
 
 	"github.com/heaven-chp/base-client-go/config"
-	"github.com/heaven-chp/common-library-go/json"
 	"github.com/heaven-chp/common-library-go/log"
 	"github.com/heaven-chp/common-library-go/socket"
 )
@@ -54,7 +53,7 @@ func (main *Main) initializeFlag() error {
 }
 
 func (main *Main) initializeConfig() error {
-	return json.ToStructFromFile(main.configFile, &main.socketClientConfig)
+	return config.Parsing(&main.socketClientConfig, main.configFile)
 }
 
 func (main *Main) initializeLog() error {
