@@ -5,13 +5,12 @@ import (
 	"flag"
 
 	"github.com/heaven-chp/base-client-go/config"
+	command_line_argument "github.com/heaven-chp/common-library-go/command-line-argument"
 	"github.com/heaven-chp/common-library-go/log"
 	"github.com/heaven-chp/common-library-go/socket"
 )
 
 type Main struct {
-	configFile string
-
 	socketClientConfig config.SocketClient
 }
 
@@ -39,21 +38,23 @@ func (this *Main) finalize() error {
 }
 
 func (this *Main) initializeFlag() error {
-	configFile := flag.String("config_file", "", "config file")
-	flag.Parse()
+	err := command_line_argument.Set([]command_line_argument.CommandLineArgumentInfo{
+		{FlagName: "config_file", Usage: "config/SocketClient.config", DefaultValue: string("")},
+	})
+	if err != nil {
+		return nil
+	}
 
 	if flag.NFlag() != 1 {
 		flag.Usage()
 		return errors.New("invalid flag")
 	}
 
-	this.configFile = *configFile
-
 	return nil
 }
 
 func (this *Main) initializeConfig() error {
-	return config.Parsing(&this.socketClientConfig, this.configFile)
+	return config.Parsing(&this.socketClientConfig, command_line_argument.Get("config_file").(string))
 }
 
 func (this *Main) initializeLog() error {
@@ -107,7 +108,12 @@ func (this *Main) Run() error {
 	if err != nil {
 		return err
 	}
-	defer this.finalize()
+	defer func() {
+		err := this.finalize()
+		if err != nil {
+			log.Error(err.Error())
+		}
+	}()
 
 	log.Info("process start")
 	defer log.Info("process end")
@@ -120,6 +126,6 @@ func main() {
 
 	err := main.Run()
 	if err != nil {
-		log.Error(err.Error())
+		panic(err)
 	}
 }
