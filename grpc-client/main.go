@@ -76,10 +76,6 @@ func (this *Main) finalizeLog() error {
 }
 
 func (this *Main) job() error {
-	timeout := this.grpcClientConfig.Timeout
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
 	connection, err := grpc.GetConnection(this.grpcClientConfig.Address)
 	if err != nil {
 		return err
@@ -88,13 +84,14 @@ func (this *Main) job() error {
 
 	client := sample.NewSampleClient(connection)
 
-	request := sample.Request{Data1: 1, Data2: "abc"}
-	reply, err := client.Func(ctx, &request)
+	timeout := this.grpcClientConfig.Timeout
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+	reply, err := client.Func1(ctx, &sample.Request{Data1: 1, Data2: "abc"})
 	if err != nil {
 		return err
 	}
 
-	log.Info("request - Data1 : (%d), Data2 : (%s)", request.Data1, request.Data2)
 	log.Info("reply - Data1 : (%d), Data2 : (%s)", reply.Data1, reply.Data2)
 
 	return nil

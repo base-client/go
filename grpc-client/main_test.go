@@ -47,12 +47,8 @@ func TestMain3(t *testing.T) {
 	}
 
 	server := grpc.Server{}
-	err = server.Initialize(grpcClientConfig.Address, &sample.Server{})
-	if err != nil {
-		t.Fatal(err)
-	}
 	go func() {
-		err := server.Run()
+		err := server.Start(grpcClientConfig.Address, &sample.Server{})
 		if err != nil {
 			t.Error(err)
 		}
@@ -66,7 +62,7 @@ func TestMain3(t *testing.T) {
 		main()
 	}
 
-	err = server.Finalize()
+	err = server.Stop()
 	if err != nil {
 		t.Error(err)
 	}
