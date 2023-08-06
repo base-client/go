@@ -14,19 +14,28 @@ func TestHttpClient(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if httpClientConfig.LogLevel != "DEBUG" {
-		t.Errorf("invalid data - LogLevel : (%s)", httpClientConfig.LogLevel)
-	}
-
-	if httpClientConfig.LogOutputPath != "./log/" {
-		t.Errorf("invalid data - LogOutputPath : (%s)", httpClientConfig.LogOutputPath)
-	}
-
-	if httpClientConfig.LogFileNamePrefix != "http-client" {
-		t.Errorf("invalid data - LogFileNamePrefix : (%s)", httpClientConfig.LogFileNamePrefix)
-	}
-
 	if httpClientConfig.Address != ":10000" {
 		t.Errorf("invalid data - Address : (%s)", httpClientConfig.Address)
 	}
+
+	if httpClientConfig.Log.Level != "DEBUG" {
+		t.Errorf("invalid data - Log.Level : (%s)", httpClientConfig.Log.Level)
+	}
+
+	if httpClientConfig.Log.OutputPath != "./log/" {
+		t.Errorf("invalid data - Log.OutputPath : (%s)", httpClientConfig.Log.OutputPath)
+	}
+
+	if httpClientConfig.Log.FileNamePrefix != "http-client" {
+		t.Errorf("invalid data - Log.FileNamePrefix : (%s)", httpClientConfig.Log.FileNamePrefix)
+	}
+
+	if httpClientConfig.Log.PrintCallerInfo != true {
+		t.Errorf("invalid data - Log.PrintCallerInfo : (%t)", httpClientConfig.Log.PrintCallerInfo)
+	}
+
+	if httpClientConfig.Log.ChannelSize != 1024 {
+		t.Errorf("invalid data - Log.ChannelSize : (%d)", httpClientConfig.Log.ChannelSize)
+	}
+
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/heaven-chp/base-client-go/config"
 	command_line_argument "github.com/heaven-chp/common-library-go/command-line-argument"
 	log "github.com/heaven-chp/common-library-go/log/file"
-	"github.com/heaven-chp/common-library-go/socket"
+	long_polling "github.com/heaven-chp/common-library-go/long-polling"
 )
 
 var onceForLog sync.Once
@@ -23,7 +23,7 @@ func log_instance() *log.FileLog {
 }
 
 type Main struct {
-	socketClientConfig config.SocketClient
+	longPollingClientConfig config.LongPollingClient
 }
 
 func (this *Main) initialize() error {
@@ -66,49 +66,42 @@ func (this *Main) initializeFlag() error {
 }
 
 func (this *Main) initializeConfig() error {
-	return config.Parsing(&this.socketClientConfig, command_line_argument.Get("config_file").(string))
+	return config.Parsing(&this.longPollingClientConfig, command_line_argument.Get("config_file").(string))
 }
 
 func (this *Main) initializeLog() error {
 	return log_instance().Initialize(log.Setting{
-		Level:           this.socketClientConfig.Log.Level,
-		OutputPath:      this.socketClientConfig.Log.OutputPath,
-		FileNamePrefix:  this.socketClientConfig.Log.FileNamePrefix,
-		PrintCallerInfo: this.socketClientConfig.Log.PrintCallerInfo,
-		ChannelSize:     this.socketClientConfig.Log.ChannelSize})
+		Level:           this.longPollingClientConfig.Log.Level,
+		OutputPath:      this.longPollingClientConfig.Log.OutputPath,
+		FileNamePrefix:  this.longPollingClientConfig.Log.FileNamePrefix,
+		PrintCallerInfo: this.longPollingClientConfig.Log.PrintCallerInfo,
+		ChannelSize:     this.longPollingClientConfig.Log.ChannelSize})
 }
 
 func (this *Main) finalizeLog() error {
 	return log_instance().Finalize()
 }
 
-func (this *Main) job() error {
-	var client socket.Client
-	defer client.Close()
-
-	err := client.Connect("tcp", this.socketClientConfig.Address)
+func (this *Main) subscription(category string) error {
+	request := long_polling.SubscriptionRequest{Category: category, Timeout: 300, SinceTime: 1}
+	response, err := long_polling.Subscription("http://"+this.longPollingClientConfig.Address+this.longPollingClientConfig.SubscriptionURI, nil, request, "", "")
 	if err != nil {
 		return err
 	}
 
-	readData, err := client.Read(1024)
-	if err != nil {
-		return err
-	}
-	log_instance().Infof("read : (%s)", readData)
+	log_instance().Infof("subscription response : (%#v)", response)
 
-	writeData := "test"
-	_, err = client.Write(writeData)
-	if err != nil {
-		return err
-	}
-	log_instance().Infof("write : (%s)", writeData)
+	return nil
+}
 
-	readData, err = client.Read(1024)
+func (this *Main) publish(category, data string) error {
+	request := long_polling.PublishRequest{Category: category, Data: data}
+	response, err := long_polling.Publish("http://"+this.longPollingClientConfig.Address+this.longPollingClientConfig.PublishURI, 10, nil, request, "", "")
 	if err != nil {
 		return err
 	}
-	log_instance().Infof("read : (%s)", readData)
+
+	log_instance().Infof("publish response : (%#v)", response)
 
 	return nil
 }
@@ -128,7 +121,20 @@ func (this *Main) Run() error {
 	log_instance().Info("process start")
 	defer log_instance().Info("process end")
 
-	return this.job()
+	const category = "category-1"
+	const data = "data-1"
+
+	err = this.publish(category, data)
+	if err != nil {
+		return err
+	}
+
+	err = this.subscription(category)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func main() {

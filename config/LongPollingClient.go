@@ -2,7 +2,11 @@ package config
 
 import "github.com/heaven-chp/common-library-go/json"
 
-type Sample struct {
+type LongPollingClient struct {
+	Address         string `json:"address"`
+	SubscriptionURI string `json:"subscription_uri"`
+	PublishURI      string `json:"publish_uri"`
+
 	Log struct {
 		Level           string `json:"level"`
 		OutputPath      string `json:"output_path"`
@@ -12,6 +16,6 @@ type Sample struct {
 	} `json:"log"`
 }
 
-func (this *Sample) parsing(from interface{}) error {
+func (this *LongPollingClient) parsing(from interface{}) error {
 	return json.ToStructFromFile(from.(string), this)
 }
