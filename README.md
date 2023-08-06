@@ -24,6 +24,13 @@
      - `./bin/grpc-client -config_file ./config/GrpcClient.config`
    - log
      - `./log/grpc-client_YYYYMMDD.log`
+ - long-polling
+   - build
+     - `go build -o ./bin/long-polling-client ./long-polling-client/`
+   - run
+     - `./bin/long-polling-client -config_file ./config/LongPollingClient.config`
+   - log
+     - `./log/long-polling-client_YYYYMMDD.log`
  - socket
    - build
      - `go build -o ./bin/socket-client ./socket-client/`
