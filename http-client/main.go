@@ -4,12 +4,24 @@ import (
 	"errors"
 	"flag"
 	net_http "net/http"
+	"sync"
 
 	"github.com/heaven-chp/base-client-go/config"
 	command_line_argument "github.com/heaven-chp/common-library-go/command-line-argument"
 	"github.com/heaven-chp/common-library-go/http"
-	"github.com/heaven-chp/common-library-go/log"
+	log "github.com/heaven-chp/common-library-go/log/file"
 )
+
+var onceForLog sync.Once
+var fileLog *log.FileLog
+
+func log_instance() *log.FileLog {
+	onceForLog.Do(func() {
+		fileLog = &log.FileLog{}
+	})
+
+	return fileLog
+}
 
 type Main struct {
 	httpClientConfig config.HttpClient
@@ -59,16 +71,17 @@ func (this *Main) initializeConfig() error {
 }
 
 func (this *Main) initializeLog() error {
-	level, err := log.ToIntLevel(this.httpClientConfig.LogLevel)
-	if err != nil {
-		return err
-	}
+	return log_instance().Initialize(log.Setting{
+		Level:           this.httpClientConfig.Log.Level,
+		OutputPath:      this.httpClientConfig.Log.OutputPath,
+		FileNamePrefix:  this.httpClientConfig.Log.FileNamePrefix,
+		PrintCallerInfo: this.httpClientConfig.Log.PrintCallerInfo,
+		ChannelSize:     this.httpClientConfig.Log.ChannelSize})
 
-	return log.Initialize(level, this.httpClientConfig.LogOutputPath, this.httpClientConfig.LogFileNamePrefix)
 }
 
 func (this *Main) finalizeLog() error {
-	return log.Finalize()
+	return log_instance().Finalize()
 }
 
 func (this *Main) Run() error {
@@ -78,15 +91,15 @@ func (this *Main) Run() error {
 	}
 	defer this.finalize()
 
-	log.Info("process start")
-	defer log.Info("process end")
+	log_instance().Info("process start")
+	defer log_instance().Info("process end")
 
 	response, err := http.Request("http://"+this.httpClientConfig.Address+"/v1/test/id-01", net_http.MethodGet, map[string][]string{"header-1": {"value-1"}}, "", 3, "", "")
 	if err != nil {
 		return err
 	}
 
-	log.Info("%#v\n", response)
+	log_instance().Infof("%#v\n", response)
 
 	return nil
 }
@@ -95,6 +108,6 @@ func main() {
 	var main Main
 	err := main.Run()
 	if err != nil {
-		log.Error(err.Error())
+		panic(err)
 	}
 }

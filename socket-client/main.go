@@ -3,12 +3,24 @@ package main
 import (
 	"errors"
 	"flag"
+	"sync"
 
 	"github.com/heaven-chp/base-client-go/config"
 	command_line_argument "github.com/heaven-chp/common-library-go/command-line-argument"
-	"github.com/heaven-chp/common-library-go/log"
+	log "github.com/heaven-chp/common-library-go/log/file"
 	"github.com/heaven-chp/common-library-go/socket"
 )
+
+var onceForLog sync.Once
+var fileLog *log.FileLog
+
+func log_instance() *log.FileLog {
+	onceForLog.Do(func() {
+		fileLog = &log.FileLog{}
+	})
+
+	return fileLog
+}
 
 type Main struct {
 	socketClientConfig config.SocketClient
@@ -58,18 +70,16 @@ func (this *Main) initializeConfig() error {
 }
 
 func (this *Main) initializeLog() error {
-	level, err := log.ToIntLevel(this.socketClientConfig.LogLevel)
-	if err != nil {
-		return err
-	}
-
-	return log.Initialize(level, this.socketClientConfig.LogOutputPath, this.socketClientConfig.LogFileNamePrefix)
+	return log_instance().Initialize(log.Setting{
+		Level:           this.socketClientConfig.Log.Level,
+		OutputPath:      this.socketClientConfig.Log.OutputPath,
+		FileNamePrefix:  this.socketClientConfig.Log.FileNamePrefix,
+		PrintCallerInfo: this.socketClientConfig.Log.PrintCallerInfo,
+		ChannelSize:     this.socketClientConfig.Log.ChannelSize})
 }
 
 func (this *Main) finalizeLog() error {
-	log.Flush()
-
-	return log.Finalize()
+	return log_instance().Finalize()
 }
 
 func (this *Main) job() error {
@@ -85,20 +95,20 @@ func (this *Main) job() error {
 	if err != nil {
 		return err
 	}
-	log.Info("read : (%s)", readData)
+	log_instance().Infof("read : (%s)", readData)
 
 	writeData := "test"
 	_, err = client.Write(writeData)
 	if err != nil {
 		return err
 	}
-	log.Info("write : (%s)", writeData)
+	log_instance().Infof("write : (%s)", writeData)
 
 	readData, err = client.Read(1024)
 	if err != nil {
 		return err
 	}
-	log.Info("read : (%s)", readData)
+	log_instance().Infof("read : (%s)", readData)
 
 	return nil
 }
@@ -111,12 +121,12 @@ func (this *Main) Run() error {
 	defer func() {
 		err := this.finalize()
 		if err != nil {
-			log.Error(err.Error())
+			log_instance().Error(err)
 		}
 	}()
 
-	log.Info("process start")
-	defer log.Info("process end")
+	log_instance().Info("process start")
+	defer log_instance().Info("process end")
 
 	return this.job()
 }

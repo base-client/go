@@ -64,7 +64,7 @@ func TestMain3(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		os.Args = []string{"test", "-config_file=" + path + "/../config/http_client.config"}
+		os.Args = []string{"test", "-config_file=" + path + "/../config/HttpClient.config"}
 		flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 		main()
