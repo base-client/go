@@ -36,6 +36,7 @@ func Initialize(clientConfig config.LongPollingClient) {
 		name := clientConfig.Log.File.Name
 		extensionName := clientConfig.Log.File.ExtensionName
 		addDate := clientConfig.Log.File.AddDate
+
 		Client.SetOutputToFile(name, extensionName, addDate)
 	}
 

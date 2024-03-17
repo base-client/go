@@ -39,45 +39,40 @@ func (this *TestServer) Start(t *testing.T) {
 	this.PrefixOfResponse = "[response] "
 
 	acceptSuccessFunc := func(client socket.Client) {
-		writeLen, err := client.Write(this.Greeting)
-		if err != nil {
-			t.Error(err)
-		}
-		if writeLen != len(this.Greeting) {
-			t.Errorf("invalid write - (%d)(%d)", writeLen, len(this.Greeting))
+		if writeLen, err := client.Write(this.Greeting); err != nil {
+			t.Fatal(err)
+		} else if writeLen != len(this.Greeting) {
+			t.Fatalf("invalid write - (%d)(%d)", writeLen, len(this.Greeting))
 		}
 
 		readData, err := client.Read(1024)
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		writeData := this.PrefixOfResponse + readData
-		writeLen, err = client.Write(writeData)
-		if err != nil {
-			t.Error(err)
-		}
-		if writeLen != len(writeData) {
-			t.Errorf("invalid write - (%d)(%d)", writeLen, len(writeData))
+		if writeLen, err := client.Write(writeData); err != nil {
+			t.Fatal(err)
+		} else if writeLen != len(writeData) {
+			t.Fatalf("invalid write - (%d)(%d)", writeLen, len(writeData))
 		}
 	}
 
 	acceptFailureFunc := func(err error) {
-		t.Error(err)
-	}
-
-	err = this.server.Start(this.Network, this.Address, 100, acceptSuccessFunc, acceptFailureFunc)
-	if err != nil {
 		t.Fatal(err)
 	}
+
+	if err := this.server.Start(this.Network, this.Address, 100, acceptSuccessFunc, acceptFailureFunc); err != nil {
+		t.Fatal(err)
+	}
+
 	for this.server.GetCondition() == false {
 		time.Sleep(100 * time.Millisecond)
 	}
 }
 
 func (this *TestServer) Stop(t *testing.T) {
-	err := this.server.Stop()
-	if err != nil {
+	if err := this.server.Stop(); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -86,10 +81,8 @@ func TestMain1(t *testing.T) {
 	os.Args = []string{"test"}
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	main := Main{}
-	err := main.Run()
-	if err.Error() != "invalid flag" {
-		t.Error(err)
+	if err := (&Main{}).Run(); err.Error() != "invalid flag" {
+		t.Fatal(err)
 	}
 }
 
@@ -97,10 +90,8 @@ func TestMain2(t *testing.T) {
 	os.Args = []string{"test", "-config_file=invalid"}
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	main := Main{}
-	err := main.Run()
-	if err.Error() != "open invalid: no such file or directory" {
-		t.Error(err)
+	if err := (&Main{}).Run(); err.Error() != "open invalid: no such file or directory" {
+		t.Fatal(err)
 	}
 }
 
@@ -109,22 +100,19 @@ func TestMain3(t *testing.T) {
 	testServer.Start(t)
 	defer testServer.Stop(t)
 
-	{
-		path, err := os.Getwd()
-		if err != nil {
-			t.Fatal(err)
-		}
-		configFile := path + "/../config/SocketClient.config"
+	path, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	configFile := path + "/../config/SocketClient.config"
 
-		os.Args = []string{"test", "-config_file=" + configFile}
-		flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-
-		main()
-
-		socketClientConfig, err := config.Get[config.SocketClient](configFile)
-		if err != nil {
-			t.Fatal(err)
-		}
+	if socketClientConfig, err := config.Get[config.SocketClient](configFile); err != nil {
+		t.Fatal(err)
+	} else {
 		defer file.Remove(socketClientConfig.Log.File.Name + "." + socketClientConfig.Log.File.ExtensionName)
 	}
+
+	os.Args = []string{"test", "-config_file=" + configFile}
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	main()
 }

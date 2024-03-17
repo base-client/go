@@ -15,45 +15,32 @@ type Main struct {
 }
 
 func (this *Main) initialize() error {
-	err := this.initializeFlag()
-	if err != nil {
+	if err := this.parseFlag(); err != nil {
 		return err
-	}
-
-	err = this.initializeConfig()
-	if err != nil {
+	} else if err := this.setConfig(); err != nil {
 		return err
-	}
+	} else {
+		log.Initialize(this.longPollingClientConfig)
 
-	err = this.initializeLog()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (this *Main) finalize() error {
-	return this.finalizeLog()
-}
-
-func (this *Main) initializeFlag() error {
-	err := command_line_flag.Parse([]command_line_flag.FlagInfo{
-		{FlagName: "config_file", Usage: "config/SocketClient.config", DefaultValue: string("")},
-	})
-	if err != nil {
 		return nil
 	}
-
-	if flag.NFlag() != 1 {
-		flag.Usage()
-		return errors.New("invalid flag")
-	}
-
-	return nil
 }
 
-func (this *Main) initializeConfig() error {
+func (this *Main) parseFlag() error {
+	flagInfos := []command_line_flag.FlagInfo{
+		{FlagName: "config_file", Usage: "config/SocketClient.config", DefaultValue: string("")},
+	}
+	if err := command_line_flag.Parse(flagInfos); err != nil {
+		return nil
+	} else if flag.NFlag() != 1 {
+		flag.Usage()
+		return errors.New("invalid flag")
+	} else {
+		return nil
+	}
+}
+
+func (this *Main) setConfig() error {
 	fileName := command_line_flag.Get[string]("config_file")
 
 	if longPollingClientConfig, err := config.Get[config.LongPollingClient](fileName); err != nil {
@@ -62,18 +49,6 @@ func (this *Main) initializeConfig() error {
 		this.longPollingClientConfig = longPollingClientConfig
 		return nil
 	}
-}
-
-func (this *Main) initializeLog() error {
-	log.Initialize(this.longPollingClientConfig)
-
-	return nil
-}
-
-func (this *Main) finalizeLog() error {
-	log.Client.Flush()
-
-	return nil
 }
 
 func (this *Main) subscription(category string) error {
@@ -101,16 +76,11 @@ func (this *Main) publish(category, data string) error {
 }
 
 func (this *Main) Run() error {
-	err := this.initialize()
-	if err != nil {
+	defer log.Client.Flush()
+
+	if err := this.initialize(); err != nil {
 		return err
 	}
-	defer func() {
-		err := this.finalize()
-		if err != nil {
-			log.Client.Error(err.Error())
-		}
-	}()
 
 	log.Client.Info("process start")
 	defer log.Client.Info("process end")
@@ -118,24 +88,18 @@ func (this *Main) Run() error {
 	const category = "category-1"
 	const data = "data-1"
 
-	err = this.publish(category, data)
-	if err != nil {
+	if err := this.publish(category, data); err != nil {
 		return err
-	}
-
-	err = this.subscription(category)
-	if err != nil {
+	} else if err := this.subscription(category); err != nil {
 		return err
+	} else {
+		return nil
 	}
-
-	return nil
 }
 
 func main() {
-	main := Main{}
-
-	err := main.Run()
-	if err != nil {
-		panic(err)
+	if err := (&Main{}).Run(); err != nil {
+		log.Client.Error(err.Error())
+		log.Client.Flush()
 	}
 }

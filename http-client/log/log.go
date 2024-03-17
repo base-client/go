@@ -36,6 +36,7 @@ func Initialize(clientConfig config.HttpClient) {
 		name := clientConfig.Log.File.Name
 		extensionName := clientConfig.Log.File.ExtensionName
 		addDate := clientConfig.Log.File.AddDate
+
 		Client.SetOutputToFile(name, extensionName, addDate)
 	}
 

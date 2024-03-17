@@ -15,45 +15,32 @@ type Main struct {
 }
 
 func (this *Main) initialize() error {
-	err := this.initializeFlag()
-	if err != nil {
+	if err := this.parseFlag(); err != nil {
 		return err
-	}
-
-	err = this.initializeConfig()
-	if err != nil {
+	} else if err := this.setConfig(); err != nil {
 		return err
-	}
+	} else {
+		log.Initialize(this.socketClientConfig)
 
-	err = this.initializeLog()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (this *Main) finalize() error {
-	return this.finalizeLog()
-}
-
-func (this *Main) initializeFlag() error {
-	err := command_line_flag.Parse([]command_line_flag.FlagInfo{
-		{FlagName: "config_file", Usage: "config/SocketClient.config", DefaultValue: string("")},
-	})
-	if err != nil {
 		return nil
 	}
-
-	if flag.NFlag() != 1 {
-		flag.Usage()
-		return errors.New("invalid flag")
-	}
-
-	return nil
 }
 
-func (this *Main) initializeConfig() error {
+func (this *Main) parseFlag() error {
+	flagInfos := []command_line_flag.FlagInfo{
+		{FlagName: "config_file", Usage: "config/SocketClient.config", DefaultValue: string("")},
+	}
+	if err := command_line_flag.Parse(flagInfos); err != nil {
+		return nil
+	} else if flag.NFlag() != 1 {
+		flag.Usage()
+		return errors.New("invalid flag")
+	} else {
+		return nil
+	}
+}
+
+func (this *Main) setConfig() error {
 	fileName := command_line_flag.Get[string]("config_file")
 
 	if socketClientConfig, err := config.Get[config.SocketClient](fileName); err != nil {
@@ -64,60 +51,42 @@ func (this *Main) initializeConfig() error {
 	}
 }
 
-func (this *Main) initializeLog() error {
-	log.Initialize(this.socketClientConfig)
-
-	return nil
-}
-
-func (this *Main) finalizeLog() error {
-	log.Client.Flush()
-
-	return nil
-}
-
 func (this *Main) job() error {
 	var client socket.Client
 	defer client.Close()
 
-	err := client.Connect("tcp", this.socketClientConfig.Address)
-	if err != nil {
+	if err := client.Connect("tcp", this.socketClientConfig.Address); err != nil {
 		return err
 	}
 
-	readData, err := client.Read(1024)
-	if err != nil {
+	if readData, err := client.Read(1024); err != nil {
 		return err
+	} else {
+		log.Client.Info("read", "data", readData)
 	}
-	log.Client.Info("read", "data", readData)
 
 	writeData := "test"
-	_, err = client.Write(writeData)
-	if err != nil {
+	if _, err := client.Write(writeData); err != nil {
 		return err
+	} else {
+		log.Client.Info("write", "data", writeData)
 	}
-	log.Client.Info("write", "data", writeData)
 
-	readData, err = client.Read(1024)
-	if err != nil {
+	if readData, err := client.Read(1024); err != nil {
 		return err
+	} else {
+		log.Client.Info("read", "data", readData)
 	}
-	log.Client.Info("read", "data", readData)
 
 	return nil
 }
 
 func (this *Main) Run() error {
-	err := this.initialize()
-	if err != nil {
+	defer log.Client.Flush()
+
+	if err := this.initialize(); err != nil {
 		return err
 	}
-	defer func() {
-		err := this.finalize()
-		if err != nil {
-			log.Client.Error(err.Error())
-		}
-	}()
 
 	log.Client.Info("process start")
 	defer log.Client.Info("process end")
@@ -126,10 +95,8 @@ func (this *Main) Run() error {
 }
 
 func main() {
-	main := Main{}
-
-	err := main.Run()
-	if err != nil {
-		panic(err)
+	if err := (&Main{}).Run(); err != nil {
+		log.Client.Error(err.Error())
+		log.Client.Flush()
 	}
 }
