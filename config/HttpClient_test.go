@@ -7,35 +7,36 @@ import (
 )
 
 func TestHttpClient(t *testing.T) {
-	httpClientConfig := config.HttpClient{}
-
-	err := config.Parsing(&httpClientConfig, "./HttpClient.config")
+	httpClientConfig, err := config.Get[config.HttpClient]("./HttpClient.config")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if httpClientConfig.Address != ":10000" {
-		t.Errorf("invalid data - Address : (%s)", httpClientConfig.Address)
+		t.Fatal("invalid -", httpClientConfig.Address)
 	}
 
-	if httpClientConfig.Log.Level != "DEBUG" {
-		t.Errorf("invalid data - Log.Level : (%s)", httpClientConfig.Log.Level)
+	if httpClientConfig.Log.Level != "debug" {
+		t.Fatal("invalid -", httpClientConfig.Log.Level)
 	}
 
-	if httpClientConfig.Log.OutputPath != "./log/" {
-		t.Errorf("invalid data - Log.OutputPath : (%s)", httpClientConfig.Log.OutputPath)
+	if httpClientConfig.Log.Output != "file" {
+		t.Fatal("invalid -", httpClientConfig.Log.Output)
 	}
 
-	if httpClientConfig.Log.FileNamePrefix != "http-client" {
-		t.Errorf("invalid data - Log.FileNamePrefix : (%s)", httpClientConfig.Log.FileNamePrefix)
+	if httpClientConfig.Log.File.Name != "./http-client" {
+		t.Fatal("invalid -", httpClientConfig.Log.File.Name)
 	}
 
-	if httpClientConfig.Log.PrintCallerInfo != true {
-		t.Errorf("invalid data - Log.PrintCallerInfo : (%t)", httpClientConfig.Log.PrintCallerInfo)
+	if httpClientConfig.Log.File.ExtensionName != "log" {
+		t.Fatal("invalid -", httpClientConfig.Log.File.ExtensionName)
 	}
 
-	if httpClientConfig.Log.ChannelSize != 1024 {
-		t.Errorf("invalid data - Log.ChannelSize : (%d)", httpClientConfig.Log.ChannelSize)
+	if httpClientConfig.Log.File.AddDate {
+		t.Fatal("invalid -", httpClientConfig.Log.File.AddDate)
 	}
 
+	if httpClientConfig.Log.WithCallerInfo == false {
+		t.Fatal("invalid -", httpClientConfig.Log.WithCallerInfo)
+	}
 }

@@ -1,5 +1,13 @@
 # base-client-go
 
+## Features
+ - grpc
+ - http
+ - long-polling
+ - socket
+
+<br/>
+
 ## How to add config
  - json type config file add
    - see [config/Sample.config](https://github.com/heaven-chp/base-client-go/blob/main/config/Sample.config)

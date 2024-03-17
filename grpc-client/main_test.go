@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/heaven-chp/base-client-go/config"
+	"github.com/heaven-chp/common-library-go/file"
 	"github.com/heaven-chp/common-library-go/grpc"
 	"github.com/heaven-chp/common-library-go/grpc/sample"
 )
@@ -15,10 +16,8 @@ func TestMain1(t *testing.T) {
 	os.Args = []string{"test"}
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	main := Main{}
-	err := main.Run()
-	if err.Error() != "invalid flag" {
-		t.Error(err)
+	if err := (&Main{}).Run(); err.Error() != "invalid flag" {
+		t.Fatal(err)
 	}
 }
 
@@ -26,10 +25,8 @@ func TestMain2(t *testing.T) {
 	os.Args = []string{"test", "-config_file=invalid"}
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	main := Main{}
-	err := main.Run()
-	if err.Error() != "open invalid: no such file or directory" {
-		t.Error(err)
+	if err := (&Main{}).Run(); err.Error() != "open invalid: no such file or directory" {
+		t.Fatal(err)
 	}
 }
 
@@ -40,30 +37,25 @@ func TestMain3(t *testing.T) {
 	}
 	configFile := path + "/../config/GrpcClient.config"
 
-	grpcClientConfig := config.GrpcClient{}
-	err = config.Parsing(&grpcClientConfig, configFile)
+	grpcClientConfig, err := config.Get[config.GrpcClient](configFile)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer file.Remove(grpcClientConfig.Log.File.Name + "." + grpcClientConfig.Log.File.ExtensionName)
 
 	server := grpc.Server{}
 	go func() {
-		err := server.Start(grpcClientConfig.Address, &sample.Server{})
-		if err != nil {
-			t.Error(err)
+		if err := server.Start(grpcClientConfig.Address, &sample.Server{}); err != nil {
+			t.Fatal(err)
 		}
 	}()
 	time.Sleep(100 * time.Millisecond)
 
-	{
-		os.Args = []string{"test", "-config_file=" + configFile}
-		flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	os.Args = []string{"test", "-config_file=" + configFile}
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	main()
 
-		main()
-	}
-
-	err = server.Stop()
-	if err != nil {
-		t.Error(err)
+	if err := server.Stop(); err != nil {
+		t.Fatal(err)
 	}
 }

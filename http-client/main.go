@@ -4,110 +4,77 @@ import (
 	"errors"
 	"flag"
 	net_http "net/http"
-	"sync"
 
 	"github.com/heaven-chp/base-client-go/config"
-	command_line_argument "github.com/heaven-chp/common-library-go/command-line-argument"
+	"github.com/heaven-chp/base-client-go/http-client/log"
+	command_line_flag "github.com/heaven-chp/common-library-go/command-line/flag"
 	"github.com/heaven-chp/common-library-go/http"
-	log "github.com/heaven-chp/common-library-go/log/file"
 )
-
-var onceForLog sync.Once
-var fileLog *log.FileLog
-
-func log_instance() *log.FileLog {
-	onceForLog.Do(func() {
-		fileLog = &log.FileLog{}
-	})
-
-	return fileLog
-}
 
 type Main struct {
 	httpClientConfig config.HttpClient
 }
 
 func (this *Main) initialize() error {
-	err := this.initializeFlag()
-	if err != nil {
+	if err := this.parseFlag(); err != nil {
 		return err
-	}
-
-	err = this.initializeConfig()
-	if err != nil {
+	} else if err := this.setConfig(); err != nil {
 		return err
-	}
+	} else {
+		log.Initialize(this.httpClientConfig)
 
-	err = this.initializeLog()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (this *Main) finalize() error {
-	return this.finalizeLog()
-}
-
-func (this *Main) initializeFlag() error {
-	err := command_line_argument.Set([]command_line_argument.CommandLineArgumentInfo{
-		{FlagName: "config_file", Usage: "config/http_client.config", DefaultValue: string("")},
-	})
-	if err != nil {
 		return nil
 	}
+}
 
-	if flag.NFlag() != 1 {
-		flag.Usage()
-		return errors.New("invalid flag")
+func (this *Main) parseFlag() error {
+	flagInfos := []command_line_flag.FlagInfo{
+		{FlagName: "config_file", Usage: "config/http_client.config", DefaultValue: string("")},
 	}
 
-	return nil
+	if err := command_line_flag.Parse(flagInfos); err != nil {
+		return nil
+	} else if flag.NFlag() != 1 {
+		flag.Usage()
+		return errors.New("invalid flag")
+	} else {
+		return nil
+	}
 }
 
-func (this *Main) initializeConfig() error {
-	return config.Parsing(&this.httpClientConfig, command_line_argument.Get("config_file").(string))
-}
+func (this *Main) setConfig() error {
+	fileName := command_line_flag.Get[string]("config_file")
 
-func (this *Main) initializeLog() error {
-	return log_instance().Initialize(log.Setting{
-		Level:           this.httpClientConfig.Log.Level,
-		OutputPath:      this.httpClientConfig.Log.OutputPath,
-		FileNamePrefix:  this.httpClientConfig.Log.FileNamePrefix,
-		PrintCallerInfo: this.httpClientConfig.Log.PrintCallerInfo,
-		ChannelSize:     this.httpClientConfig.Log.ChannelSize})
-
-}
-
-func (this *Main) finalizeLog() error {
-	return log_instance().Finalize()
+	if httpClientConfig, err := config.Get[config.HttpClient](fileName); err != nil {
+		return err
+	} else {
+		this.httpClientConfig = httpClientConfig
+		return nil
+	}
 }
 
 func (this *Main) Run() error {
-	err := this.initialize()
-	if err != nil {
-		return err
-	}
-	defer this.finalize()
+	defer log.Client.Flush()
 
-	log_instance().Info("process start")
-	defer log_instance().Info("process end")
-
-	response, err := http.Request("http://"+this.httpClientConfig.Address+"/v1/test/id-01", net_http.MethodGet, map[string][]string{"header-1": {"value-1"}}, "", 3, "", "")
-	if err != nil {
+	if err := this.initialize(); err != nil {
 		return err
 	}
 
-	log_instance().Infof("%#v\n", response)
+	log.Client.Info("process start")
+	defer log.Client.Info("process end")
 
-	return nil
+	if response, err := http.Request("http://"+this.httpClientConfig.Address+"/v1/test/id-01", net_http.MethodGet, map[string][]string{"header-1": {"value-1"}}, "", 3, "", ""); err != nil {
+		return err
+	} else {
+		log.Client.Info("result", "response", response)
+
+		return nil
+	}
 }
 
 func main() {
-	var main Main
-	err := main.Run()
-	if err != nil {
-		panic(err)
+	if err := (&Main{}).Run(); err != nil {
+		log.Client.Error(err.Error())
+		log.Client.Flush()
 	}
 }

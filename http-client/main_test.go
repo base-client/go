@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/heaven-chp/base-client-go/config"
+	"github.com/heaven-chp/common-library-go/file"
 	"github.com/heaven-chp/common-library-go/http"
 )
 
@@ -14,10 +16,8 @@ func TestMain1(t *testing.T) {
 	os.Args = []string{"test"}
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	main := Main{}
-	err := main.Run()
-	if err.Error() != "invalid flag" {
-		t.Error(err)
+	if err := (&Main{}).Run(); err.Error() != "invalid flag" {
+		t.Fatal(err)
 	}
 }
 
@@ -25,10 +25,8 @@ func TestMain2(t *testing.T) {
 	os.Args = []string{"test", "-config_file=invalid"}
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	main := Main{}
-	err := main.Run()
-	if err.Error() != "open invalid: no such file or directory" {
-		t.Error(err)
+	if err := (&Main{}).Run(); err.Error() != "open invalid: no such file or directory" {
+		t.Fatal(err)
 	}
 }
 
@@ -45,16 +43,14 @@ func TestMain3(t *testing.T) {
 		})
 	}
 
-	err := server.Start(":10000", func(err error) { t.Error(err) }, middlewareFunction)
-	if err != nil {
+	if err := server.Start(":10000", func(err error) { t.Error(err) }, middlewareFunction); err != nil {
 		t.Fatal(err)
 	}
 	time.Sleep(time.Duration(200) * time.Millisecond)
 
 	defer func() {
-		err := server.Stop(5)
-		if err != nil {
-			t.Error(err)
+		if err := server.Stop(5); err != nil {
+			t.Fatal(err)
 		}
 	}()
 
@@ -63,10 +59,16 @@ func TestMain3(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		configFile := path + "/../config/HttpClient.config"
 
-		os.Args = []string{"test", "-config_file=" + path + "/../config/HttpClient.config"}
+		if httpClientConfig, err := config.Get[config.HttpClient](configFile); err != nil {
+			t.Fatal(err)
+		} else {
+			defer file.Remove(httpClientConfig.Log.File.Name + "." + httpClientConfig.Log.File.ExtensionName)
+		}
+
+		os.Args = []string{"test", "-config_file=" + configFile}
 		flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-
 		main()
 	}
 }
