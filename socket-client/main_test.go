@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/heaven-chp/base-client-go/config"
+	"github.com/heaven-chp/common-library-go/file"
 	"github.com/heaven-chp/common-library-go/socket"
 )
 
@@ -26,11 +27,11 @@ func (this *TestServer) Start(t *testing.T) {
 	}
 	configFile := path + "/../config/SocketClient.config"
 
-	socketClientConfig := config.SocketClient{}
-	err = config.Parsing(&socketClientConfig, configFile)
+	socketClientConfig, err := config.Get[config.SocketClient](configFile)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer file.Remove(socketClientConfig.Log.File.Name + "." + socketClientConfig.Log.File.ExtensionName)
 
 	this.Network = "tcp"
 	this.Address = socketClientConfig.Address
@@ -119,5 +120,11 @@ func TestMain3(t *testing.T) {
 		flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 		main()
+
+		socketClientConfig, err := config.Get[config.SocketClient](configFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer file.Remove(socketClientConfig.Log.File.Name + "." + socketClientConfig.Log.File.ExtensionName)
 	}
 }

@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/heaven-chp/base-client-go/config"
+	"github.com/heaven-chp/common-library-go/file"
 	"github.com/heaven-chp/common-library-go/http"
 )
 
@@ -63,9 +65,16 @@ func TestMain3(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		configFile := path + "/../config/HttpClient.config"
 
-		os.Args = []string{"test", "-config_file=" + path + "/../config/HttpClient.config"}
+		os.Args = []string{"test", "-config_file=" + configFile}
 		flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+
+		if httpClientConfig, err := config.Get[config.HttpClient](configFile); err != nil {
+			t.Fatal(err)
+		} else {
+			defer file.Remove(httpClientConfig.Log.File.Name + "." + httpClientConfig.Log.File.ExtensionName)
+		}
 
 		main()
 	}

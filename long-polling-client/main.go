@@ -3,24 +3,12 @@ package main
 import (
 	"errors"
 	"flag"
-	"sync"
 
 	"github.com/heaven-chp/base-client-go/config"
-	command_line_argument "github.com/heaven-chp/common-library-go/command-line-argument"
-	log "github.com/heaven-chp/common-library-go/log/file"
+	"github.com/heaven-chp/base-client-go/long-polling-client/log"
+	command_line_flag "github.com/heaven-chp/common-library-go/command-line/flag"
 	long_polling "github.com/heaven-chp/common-library-go/long-polling"
 )
-
-var onceForLog sync.Once
-var fileLog *log.FileLog
-
-func log_instance() *log.FileLog {
-	onceForLog.Do(func() {
-		fileLog = &log.FileLog{}
-	})
-
-	return fileLog
-}
 
 type Main struct {
 	longPollingClientConfig config.LongPollingClient
@@ -50,7 +38,7 @@ func (this *Main) finalize() error {
 }
 
 func (this *Main) initializeFlag() error {
-	err := command_line_argument.Set([]command_line_argument.CommandLineArgumentInfo{
+	err := command_line_flag.Parse([]command_line_flag.FlagInfo{
 		{FlagName: "config_file", Usage: "config/SocketClient.config", DefaultValue: string("")},
 	})
 	if err != nil {
@@ -66,20 +54,26 @@ func (this *Main) initializeFlag() error {
 }
 
 func (this *Main) initializeConfig() error {
-	return config.Parsing(&this.longPollingClientConfig, command_line_argument.Get("config_file").(string))
+	fileName := command_line_flag.Get[string]("config_file")
+
+	if longPollingClientConfig, err := config.Get[config.LongPollingClient](fileName); err != nil {
+		return err
+	} else {
+		this.longPollingClientConfig = longPollingClientConfig
+		return nil
+	}
 }
 
 func (this *Main) initializeLog() error {
-	return log_instance().Initialize(log.Setting{
-		Level:           this.longPollingClientConfig.Log.Level,
-		OutputPath:      this.longPollingClientConfig.Log.OutputPath,
-		FileNamePrefix:  this.longPollingClientConfig.Log.FileNamePrefix,
-		PrintCallerInfo: this.longPollingClientConfig.Log.PrintCallerInfo,
-		ChannelSize:     this.longPollingClientConfig.Log.ChannelSize})
+	log.Initialize(this.longPollingClientConfig)
+
+	return nil
 }
 
 func (this *Main) finalizeLog() error {
-	return log_instance().Finalize()
+	log.Client.Flush()
+
+	return nil
 }
 
 func (this *Main) subscription(category string) error {
@@ -89,7 +83,7 @@ func (this *Main) subscription(category string) error {
 		return err
 	}
 
-	log_instance().Infof("subscription response : (%#v)", response)
+	log.Client.Info("subscription", "response", response)
 
 	return nil
 }
@@ -101,7 +95,7 @@ func (this *Main) publish(category, data string) error {
 		return err
 	}
 
-	log_instance().Infof("publish response : (%#v)", response)
+	log.Client.Info("publish", "response", response)
 
 	return nil
 }
@@ -114,12 +108,12 @@ func (this *Main) Run() error {
 	defer func() {
 		err := this.finalize()
 		if err != nil {
-			log_instance().Error(err)
+			log.Client.Error(err.Error())
 		}
 	}()
 
-	log_instance().Info("process start")
-	defer log_instance().Info("process end")
+	log.Client.Info("process start")
+	defer log.Client.Info("process end")
 
 	const category = "category-1"
 	const data = "data-1"

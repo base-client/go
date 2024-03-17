@@ -4,24 +4,12 @@ import (
 	"errors"
 	"flag"
 	net_http "net/http"
-	"sync"
 
 	"github.com/heaven-chp/base-client-go/config"
-	command_line_argument "github.com/heaven-chp/common-library-go/command-line-argument"
+	"github.com/heaven-chp/base-client-go/http-client/log"
+	command_line_flag "github.com/heaven-chp/common-library-go/command-line/flag"
 	"github.com/heaven-chp/common-library-go/http"
-	log "github.com/heaven-chp/common-library-go/log/file"
 )
-
-var onceForLog sync.Once
-var fileLog *log.FileLog
-
-func log_instance() *log.FileLog {
-	onceForLog.Do(func() {
-		fileLog = &log.FileLog{}
-	})
-
-	return fileLog
-}
 
 type Main struct {
 	httpClientConfig config.HttpClient
@@ -51,7 +39,7 @@ func (this *Main) finalize() error {
 }
 
 func (this *Main) initializeFlag() error {
-	err := command_line_argument.Set([]command_line_argument.CommandLineArgumentInfo{
+	err := command_line_flag.Parse([]command_line_flag.FlagInfo{
 		{FlagName: "config_file", Usage: "config/http_client.config", DefaultValue: string("")},
 	})
 	if err != nil {
@@ -67,21 +55,26 @@ func (this *Main) initializeFlag() error {
 }
 
 func (this *Main) initializeConfig() error {
-	return config.Parsing(&this.httpClientConfig, command_line_argument.Get("config_file").(string))
+	fileName := command_line_flag.Get[string]("config_file")
+
+	if httpClientConfig, err := config.Get[config.HttpClient](fileName); err != nil {
+		return err
+	} else {
+		this.httpClientConfig = httpClientConfig
+		return nil
+	}
 }
 
 func (this *Main) initializeLog() error {
-	return log_instance().Initialize(log.Setting{
-		Level:           this.httpClientConfig.Log.Level,
-		OutputPath:      this.httpClientConfig.Log.OutputPath,
-		FileNamePrefix:  this.httpClientConfig.Log.FileNamePrefix,
-		PrintCallerInfo: this.httpClientConfig.Log.PrintCallerInfo,
-		ChannelSize:     this.httpClientConfig.Log.ChannelSize})
+	log.Initialize(this.httpClientConfig)
 
+	return nil
 }
 
 func (this *Main) finalizeLog() error {
-	return log_instance().Finalize()
+	log.Client.Flush()
+
+	return nil
 }
 
 func (this *Main) Run() error {
@@ -91,15 +84,15 @@ func (this *Main) Run() error {
 	}
 	defer this.finalize()
 
-	log_instance().Info("process start")
-	defer log_instance().Info("process end")
+	log.Client.Info("process start")
+	defer log.Client.Info("process end")
 
 	response, err := http.Request("http://"+this.httpClientConfig.Address+"/v1/test/id-01", net_http.MethodGet, map[string][]string{"header-1": {"value-1"}}, "", 3, "", "")
 	if err != nil {
 		return err
 	}
 
-	log_instance().Infof("%#v\n", response)
+	log.Client.Info("result", "response", response)
 
 	return nil
 }

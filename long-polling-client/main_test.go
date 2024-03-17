@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/heaven-chp/base-client-go/config"
+	"github.com/heaven-chp/common-library-go/file"
 	long_polling "github.com/heaven-chp/common-library-go/long-polling"
 )
 
@@ -22,11 +23,11 @@ func (this *TestServer) Start(t *testing.T) {
 	}
 	configFile := path + "/../config/LongPollingClient.config"
 
-	longPollingClientConfig := config.LongPollingClient{}
-	err = config.Parsing(&longPollingClientConfig, configFile)
+	longPollingClientConfig, err := config.Get[config.LongPollingClient](configFile)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer file.Remove(longPollingClientConfig.Log.File.Name + "." + longPollingClientConfig.Log.File.ExtensionName)
 
 	serverInfo := long_polling.ServerInfo{
 		Address:                        longPollingClientConfig.Address,
@@ -91,5 +92,11 @@ func TestMain3(t *testing.T) {
 		flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 		main()
+
+		longPollingClientConfig, err := config.Get[config.LongPollingClient](configFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer file.Remove(longPollingClientConfig.Log.File.Name + "." + longPollingClientConfig.Log.File.ExtensionName)
 	}
 }

@@ -7,38 +7,40 @@ import (
 )
 
 func TestGrpcClient(t *testing.T) {
-	grpcClientConfig := config.GrpcClient{}
-
-	err := config.Parsing(&grpcClientConfig, "./GrpcClient.config")
+	grpcClientConfig, err := config.Get[config.GrpcClient]("./GrpcClient.config")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if grpcClientConfig.Address != ":50051" {
-		t.Errorf("invalid data - Address : (%s)", grpcClientConfig.Address)
+		t.Fatal("invalid -", grpcClientConfig.Address)
 	}
 
 	if grpcClientConfig.Timeout != 3 {
-		t.Errorf("invalid data - Timeout : (%d)", grpcClientConfig.Timeout)
+		t.Fatal("invalid -", grpcClientConfig.Timeout)
 	}
 
-	if grpcClientConfig.Log.Level != "DEBUG" {
-		t.Errorf("invalid data - Log.Level : (%s)", grpcClientConfig.Log.Level)
+	if grpcClientConfig.Log.Level != "debug" {
+		t.Fatal("invalid -", grpcClientConfig.Log.Level)
 	}
 
-	if grpcClientConfig.Log.OutputPath != "./log/" {
-		t.Errorf("invalid data - Log.OutputPath : (%s)", grpcClientConfig.Log.OutputPath)
+	if grpcClientConfig.Log.Output != "file" {
+		t.Fatal("invalid -", grpcClientConfig.Log.Output)
 	}
 
-	if grpcClientConfig.Log.FileNamePrefix != "grpc-client" {
-		t.Errorf("invalid data - Log.FileNamePrefix : (%s)", grpcClientConfig.Log.FileNamePrefix)
+	if grpcClientConfig.Log.File.Name != "./grpc-client" {
+		t.Fatal("invalid -", grpcClientConfig.Log.File.Name)
 	}
 
-	if grpcClientConfig.Log.PrintCallerInfo != true {
-		t.Errorf("invalid data - Log.PrintCallerInfo : (%t)", grpcClientConfig.Log.PrintCallerInfo)
+	if grpcClientConfig.Log.File.ExtensionName != "log" {
+		t.Fatal("invalid -", grpcClientConfig.Log.File.ExtensionName)
 	}
 
-	if grpcClientConfig.Log.ChannelSize != 1024 {
-		t.Errorf("invalid data - Log.ChannelSize : (%d)", grpcClientConfig.Log.ChannelSize)
+	if grpcClientConfig.Log.File.AddDate {
+		t.Fatal("invalid -", grpcClientConfig.Log.File.AddDate)
+	}
+
+	if grpcClientConfig.Log.WithCallerInfo == false {
+		t.Fatal("invalid -", grpcClientConfig.Log.WithCallerInfo)
 	}
 }

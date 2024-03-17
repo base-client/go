@@ -4,26 +4,14 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"sync"
 	"time"
 
 	"github.com/heaven-chp/base-client-go/config"
-	command_line_argument "github.com/heaven-chp/common-library-go/command-line-argument"
+	"github.com/heaven-chp/base-client-go/grpc-client/log"
+	command_line_flag "github.com/heaven-chp/common-library-go/command-line/flag"
 	"github.com/heaven-chp/common-library-go/grpc"
 	"github.com/heaven-chp/common-library-go/grpc/sample"
-	log "github.com/heaven-chp/common-library-go/log/file"
 )
-
-var onceForLog sync.Once
-var fileLog *log.FileLog
-
-func log_instance() *log.FileLog {
-	onceForLog.Do(func() {
-		fileLog = &log.FileLog{}
-	})
-
-	return fileLog
-}
 
 type Main struct {
 	grpcClientConfig config.GrpcClient
@@ -53,7 +41,7 @@ func (this *Main) finalize() error {
 }
 
 func (this *Main) initializeFlag() error {
-	err := command_line_argument.Set([]command_line_argument.CommandLineArgumentInfo{
+	err := command_line_flag.Parse([]command_line_flag.FlagInfo{
 		{FlagName: "config_file", Usage: "config/GrpcClient.config", DefaultValue: string("")},
 	})
 	if err != nil {
@@ -69,21 +57,26 @@ func (this *Main) initializeFlag() error {
 }
 
 func (this *Main) initializeConfig() error {
-	return config.Parsing(&this.grpcClientConfig, command_line_argument.Get("config_file").(string))
+	fileName := command_line_flag.Get[string]("config_file")
+
+	if grpcClientConfig, err := config.Get[config.GrpcClient](fileName); err != nil {
+		return err
+	} else {
+		this.grpcClientConfig = grpcClientConfig
+		return nil
+	}
 }
 
 func (this *Main) initializeLog() error {
-	return log_instance().Initialize(log.Setting{
-		Level:           this.grpcClientConfig.Log.Level,
-		OutputPath:      this.grpcClientConfig.Log.OutputPath,
-		FileNamePrefix:  this.grpcClientConfig.Log.FileNamePrefix,
-		PrintCallerInfo: this.grpcClientConfig.Log.PrintCallerInfo,
-		ChannelSize:     this.grpcClientConfig.Log.ChannelSize})
+	log.Initialize(this.grpcClientConfig)
 
+	return nil
 }
 
 func (this *Main) finalizeLog() error {
-	return log_instance().Finalize()
+	log.Client.Flush()
+
+	return nil
 }
 
 func (this *Main) job() error {
@@ -103,7 +96,7 @@ func (this *Main) job() error {
 		return err
 	}
 
-	log_instance().Infof("reply - Data1 : (%d), Data2 : (%s)", reply.Data1, reply.Data2)
+	log.Client.Info("reply", "Data1", reply.Data1, "Data2", reply.Data2)
 
 	return nil
 }
@@ -116,12 +109,12 @@ func (this *Main) Run() error {
 	defer func() {
 		err := this.finalize()
 		if err != nil {
-			log_instance().Error(err)
+			log.Client.Error(err.Error())
 		}
 	}()
 
-	log_instance().Info("process start")
-	defer log_instance().Info("process end")
+	log.Client.Info("process start")
+	defer log.Client.Info("process end")
 
 	return this.job()
 }

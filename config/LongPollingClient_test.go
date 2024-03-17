@@ -7,42 +7,44 @@ import (
 )
 
 func TestLongPollingClient(t *testing.T) {
-	longPollingClientConfig := config.LongPollingClient{}
-
-	err := config.Parsing(&longPollingClientConfig, "./LongPollingClient.config")
+	longPollingClientConfig, err := config.Get[config.LongPollingClient]("./LongPollingClient.config")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if longPollingClientConfig.Address != ":30000" {
-		t.Errorf("invalid data - Address : (%s)", longPollingClientConfig.Address)
+		t.Fatal("invalid -", longPollingClientConfig.Address)
 	}
 
 	if longPollingClientConfig.SubscriptionURI != "/subscription" {
-		t.Errorf("invalid data - SubscriptionURI : (%s)", longPollingClientConfig.SubscriptionURI)
+		t.Fatal("invalid -", longPollingClientConfig.SubscriptionURI)
 	}
 
 	if longPollingClientConfig.PublishURI != "/publish" {
-		t.Errorf("invalid data - PublishURI : (%s)", longPollingClientConfig.PublishURI)
+		t.Fatal("invalid -", longPollingClientConfig.PublishURI)
 	}
 
-	if longPollingClientConfig.Log.Level != "DEBUG" {
-		t.Errorf("invalid data - Log.Level : (%s)", longPollingClientConfig.Log.Level)
+	if longPollingClientConfig.Log.Level != "debug" {
+		t.Fatal("invalid -", longPollingClientConfig.Log.Level)
 	}
 
-	if longPollingClientConfig.Log.OutputPath != "./log/" {
-		t.Errorf("invalid data - Log.OutputPath : (%s)", longPollingClientConfig.Log.OutputPath)
+	if longPollingClientConfig.Log.Output != "file" {
+		t.Fatal("invalid -", longPollingClientConfig.Log.Output)
 	}
 
-	if longPollingClientConfig.Log.FileNamePrefix != "long-polling-client" {
-		t.Errorf("invalid data - Log.FileNamePrefix : (%s)", longPollingClientConfig.Log.FileNamePrefix)
+	if longPollingClientConfig.Log.File.Name != "./long-polling-client" {
+		t.Fatal("invalid -", longPollingClientConfig.Log.File.Name)
 	}
 
-	if longPollingClientConfig.Log.PrintCallerInfo != true {
-		t.Errorf("invalid data - Log.PrintCallerInfo : (%t)", longPollingClientConfig.Log.PrintCallerInfo)
+	if longPollingClientConfig.Log.File.ExtensionName != "log" {
+		t.Fatal("invalid -", longPollingClientConfig.Log.File.ExtensionName)
 	}
 
-	if longPollingClientConfig.Log.ChannelSize != 1024 {
-		t.Errorf("invalid data - Log.ChannelSize : (%d)", longPollingClientConfig.Log.ChannelSize)
+	if longPollingClientConfig.Log.File.AddDate {
+		t.Fatal("invalid -", longPollingClientConfig.Log.File.AddDate)
+	}
+
+	if longPollingClientConfig.Log.WithCallerInfo == false {
+		t.Fatal("invalid -", longPollingClientConfig.Log.WithCallerInfo)
 	}
 }
