@@ -6,11 +6,11 @@ import (
 	"flag"
 	"time"
 
-	"github.com/heaven-chp/base-client-go/config"
-	"github.com/heaven-chp/base-client-go/grpc-client/log"
-	"github.com/heaven-chp/common-library-go/command-line/flags"
-	"github.com/heaven-chp/common-library-go/grpc"
-	"github.com/heaven-chp/common-library-go/grpc/sample"
+	"github.com/base-client/go/config"
+	"github.com/base-client/go/grpc-client/log"
+	"github.com/common-library/go/command-line/flags"
+	"github.com/common-library/go/grpc"
+	"github.com/common-library/go/grpc/sample"
 )
 
 type Main struct {

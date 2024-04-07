@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/heaven-chp/base-client-go/config"
-	"github.com/heaven-chp/common-library-go/file"
-	"github.com/heaven-chp/common-library-go/socket"
+	"github.com/base-client/go/config"
+	"github.com/common-library/go/file"
+	"github.com/common-library/go/socket"
 )
 
 type TestServer struct {

@@ -4,10 +4,10 @@ import (
 	"errors"
 	"flag"
 
-	"github.com/heaven-chp/base-client-go/config"
-	"github.com/heaven-chp/base-client-go/long-polling-client/log"
-	"github.com/heaven-chp/common-library-go/command-line/flags"
-	long_polling "github.com/heaven-chp/common-library-go/long-polling"
+	"github.com/base-client/go/config"
+	"github.com/base-client/go/long-polling-client/log"
+	"github.com/common-library/go/command-line/flags"
+	long_polling "github.com/common-library/go/long-polling"
 )
 
 type Main struct {

@@ -1,4 +1,4 @@
-# base-client-go
+# Base Client for Go
 
 ## Features
  - grpc
@@ -10,13 +10,13 @@
 
 ## How to add config
  - json type config file add
-   - see [config/Sample.config](https://github.com/heaven-chp/base-client-go/blob/main/config/Sample.config)
+   - see [config/Sample.config](https://github.com/base-client/go/blob/main/config/Sample.config)
  - struct add
-   - see [config/Sample.go](https://github.com/heaven-chp/base-client-go/blob/main/config/Sample.go)
+   - see [config/Sample.go](https://github.com/base-client/go/blob/main/config/Sample.go)
  - test add
-   - see [Sample_test.go](https://github.com/heaven-chp/base-client-go/blob/main/config/Sample_test.go)
+   - see [Sample_test.go](https://github.com/base-client/go/blob/main/config/Sample_test.go)
  - example of use
-   - socketClientConfig of [socket-client/main.go](https://github.com/heaven-chp/base-client-go/blob/main/socket-client/main.go)
+   - socketClientConfig of [socket-client/main.go](https://github.com/base-client/go/blob/main/socket-client/main.go)
 
 <br/>
 
@@ -24,7 +24,7 @@
  - prepare
    - run
      - server must be running
-       - [How to use server](https://github.com/heaven-chp/base-server-go#how-to-use-server)
+       - [How to use server](https://github.com/base-server/go#how-to-use-server)
  - grpc
    - build
      - `go build -o ./bin/grpc-client ./grpc-client/`
