@@ -4,10 +4,10 @@ import (
 	"errors"
 	"flag"
 
-	"github.com/heaven-chp/base-client-go/config"
-	"github.com/heaven-chp/base-client-go/socket-client/log"
-	"github.com/heaven-chp/common-library-go/command-line/flags"
-	"github.com/heaven-chp/common-library-go/socket"
+	"github.com/base-client/go/config"
+	"github.com/base-client/go/socket-client/log"
+	"github.com/common-library/go/command-line/flags"
+	"github.com/common-library/go/socket"
 )
 
 type Main struct {

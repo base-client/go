@@ -5,10 +5,10 @@ import (
 	"flag"
 	net_http "net/http"
 
-	"github.com/heaven-chp/base-client-go/config"
-	"github.com/heaven-chp/base-client-go/http-client/log"
-	"github.com/heaven-chp/common-library-go/command-line/flags"
-	"github.com/heaven-chp/common-library-go/http"
+	"github.com/base-client/go/config"
+	"github.com/base-client/go/http-client/log"
+	"github.com/common-library/go/command-line/flags"
+	"github.com/common-library/go/http"
 )
 
 type Main struct {

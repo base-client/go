@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/heaven-chp/base-client-go/config"
-	"github.com/heaven-chp/common-library-go/file"
-	long_polling "github.com/heaven-chp/common-library-go/long-polling"
+	"github.com/base-client/go/config"
+	"github.com/common-library/go/file"
+	long_polling "github.com/common-library/go/long-polling"
 )
 
 type TestServer struct {

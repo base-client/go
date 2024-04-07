@@ -3,8 +3,8 @@ package log
 import (
 	"strings"
 
-	"github.com/heaven-chp/base-client-go/config"
-	"github.com/heaven-chp/common-library-go/log/slog"
+	"github.com/base-client/go/config"
+	"github.com/common-library/go/log/slog"
 )
 
 var Client slog.Log

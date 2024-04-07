@@ -3,7 +3,7 @@ package config_test
 import (
 	"testing"
 
-	"github.com/heaven-chp/base-client-go/config"
+	"github.com/base-client/go/config"
 )
 
 func TestSample(t *testing.T) {
