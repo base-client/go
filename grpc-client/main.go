@@ -15,6 +15,7 @@ import (
 
 type Main struct {
 	grpcClientConfig config.GrpcClient
+	timeout          time.Duration
 }
 
 func (this *Main) initialize() error {
@@ -50,8 +51,12 @@ func (this *Main) setConfig() error {
 
 	if grpcClientConfig, err := config.Get[config.GrpcClient](fileName); err != nil {
 		return err
+	} else if duration, err := time.ParseDuration(grpcClientConfig.Timeout); err != nil {
+		return err
 	} else {
 		this.grpcClientConfig = grpcClientConfig
+		this.timeout = duration
+
 		return nil
 	}
 }
@@ -65,8 +70,7 @@ func (this *Main) job() error {
 
 	client := sample.NewSampleClient(connection)
 
-	timeout := this.grpcClientConfig.Timeout
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), this.timeout)
 	defer cancel()
 
 	if reply, err := client.Func1(ctx, &sample.Request{Data1: 1, Data2: "abc"}); err != nil {

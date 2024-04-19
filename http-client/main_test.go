@@ -32,7 +32,7 @@ func TestMain2(t *testing.T) {
 
 func TestMain3(t *testing.T) {
 	server := http.Server{}
-	server.AddHandler("/v1/test/{id}", net_http.MethodGet, func(responseWriter net_http.ResponseWriter, request *net_http.Request) {
+	server.RegisterHandlerFunc("/v1/test/{id}", net_http.MethodGet, func(responseWriter net_http.ResponseWriter, request *net_http.Request) {
 		responseWriter.WriteHeader(net_http.StatusOK)
 		responseWriter.Write([]byte(`{"field_1":"value-1"}`))
 	})

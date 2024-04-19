@@ -25,6 +25,11 @@
    - run
      - server must be running
        - [How to use server](https://github.com/base-server/go#how-to-use-server)
+ - cloudevents
+   - build
+     - `go build -o ./bin/cloudevents-client ./cloudevents-client/`
+   - run
+     - `./bin/cloudevents-client -config-file ./config/CloudEventsClient.config`
  - grpc
    - build
      - `go build -o ./bin/grpc-client ./grpc-client/`

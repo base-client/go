@@ -64,7 +64,7 @@ func (this *Main) Run() error {
 	log.Client.Info("process start")
 	defer log.Client.Info("process end")
 
-	if response, err := http.Request("http://"+this.httpClientConfig.Address+"/v1/test/id-01", net_http.MethodGet, map[string][]string{"header-1": {"value-1"}}, "", 3, "", ""); err != nil {
+	if response, err := http.Request("http://"+this.httpClientConfig.Address+"/v1/test/id-01", net_http.MethodGet, map[string][]string{"header-1": {"value-1"}}, "", 3, "", "", nil); err != nil {
 		return err
 	} else {
 		log.Client.Info("result", "response", response)
