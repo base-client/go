@@ -31,7 +31,7 @@ func (this *TestServer) Start(t *testing.T) {
 
 	serverInfo := long_polling.ServerInfo{
 		Address:                        longPollingClientConfig.Address,
-		Timeout:                        3600,
+		TimeoutSeconds:                 3600,
 		SubscriptionURI:                longPollingClientConfig.SubscriptionURI,
 		HandlerToRunBeforeSubscription: func(w http.ResponseWriter, r *http.Request) bool { return true },
 		PublishURI:                     longPollingClientConfig.PublishURI,

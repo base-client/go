@@ -54,7 +54,7 @@ func (this *Main) setConfig() error {
 }
 
 func (this *Main) subscription(category string) error {
-	request := long_polling.SubscriptionRequest{Category: category, Timeout: 300, SinceTime: 1}
+	request := long_polling.SubscriptionRequest{Category: category, TimeoutSeconds: 300, SinceTime: 1}
 	response, err := long_polling.Subscription("http://"+this.longPollingClientConfig.Address+this.longPollingClientConfig.SubscriptionURI, nil, request, "", "", nil)
 	if err != nil {
 		return err
