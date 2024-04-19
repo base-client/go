@@ -2,7 +2,7 @@ package config
 
 type GrpcClient struct {
 	Address string `json:"address"`
-	Timeout int    `json:"timeout"`
+	Timeout string `json:"timeout"`
 
 	Log struct {
 		Level  string `json:"level"`

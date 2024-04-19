@@ -16,7 +16,7 @@ func TestGrpcClient(t *testing.T) {
 		t.Fatal("invalid -", grpcClientConfig.Address)
 	}
 
-	if grpcClientConfig.Timeout != 3 {
+	if grpcClientConfig.Timeout != "3s" {
 		t.Fatal("invalid -", grpcClientConfig.Timeout)
 	}
 
