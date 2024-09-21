@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/base-client/go/config"
+	"github.com/base-client/go/common/config"
 	"github.com/common-library/go/file"
 	"github.com/common-library/go/socket"
 )
@@ -21,20 +21,8 @@ type TestServer struct {
 }
 
 func (this *TestServer) Start(t *testing.T) {
-	path, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	configFile := path + "/../config/SocketClient.config"
-
-	socketClientConfig, err := config.Get[config.SocketClient](configFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer file.Remove(socketClientConfig.Log.File.Name + "." + socketClientConfig.Log.File.ExtensionName)
-
 	this.Network = "tcp"
-	this.Address = socketClientConfig.Address
+	this.Address = config.Get("socket.address").(string)
 	this.Greeting = "greeting"
 	this.PrefixOfResponse = "[response] "
 
@@ -77,42 +65,19 @@ func (this *TestServer) Stop(t *testing.T) {
 	}
 }
 
-func TestMain1(t *testing.T) {
-	os.Args = []string{"test"}
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+func TestMain(t *testing.T) {
+	const configFile = "../common/config/config.yaml"
 
-	if err := (&Main{}).Run(); err.Error() != "invalid flag" {
+	if err := config.Read(configFile); err != nil {
 		t.Fatal(err)
 	}
-}
+	defer file.Remove(config.Get("socket.log.file.name").(string) + "." + config.Get("socket.log.file.extensionName").(string))
 
-func TestMain2(t *testing.T) {
-	os.Args = []string{"test", "-config_file=invalid"}
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-
-	if err := (&Main{}).Run(); err.Error() != "open invalid: no such file or directory" {
-		t.Fatal(err)
-	}
-}
-
-func TestMain3(t *testing.T) {
 	testServer := TestServer{}
 	testServer.Start(t)
 	defer testServer.Stop(t)
 
-	path, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	configFile := path + "/../config/SocketClient.config"
-
-	if socketClientConfig, err := config.Get[config.SocketClient](configFile); err != nil {
-		t.Fatal(err)
-	} else {
-		defer file.Remove(socketClientConfig.Log.File.Name + "." + socketClientConfig.Log.File.ExtensionName)
-	}
-
-	os.Args = []string{"test", "-config_file=" + configFile}
+	os.Args = []string{"test", "-config-file=" + configFile}
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	main()
 }

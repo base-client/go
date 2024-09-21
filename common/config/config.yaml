@@ -1,0 +1,54 @@
+cloudEvents:
+  address: :40000
+
+gRPC:
+  address: :50051
+  timeout: 3s
+  log:
+    level: debug
+    output: file
+    file:
+      name: ./grpc-client
+      extensionName: log
+      addDate: false
+    withCallerInfo: true
+
+http:
+  address: :10000
+  log:
+    level: debug
+    output: file
+    file:
+      name: ./http-client
+      extensionName: log
+      addDate: false
+    withCallerInfo: true
+
+longPolling:
+  address: :30000
+  subscriptionURI: /subscription
+  publishURI: /publish
+  filePersistorInfo:
+      use: false
+      fileName: ./file-persistor.txt
+      writeBufferSize: 250
+      writeFlushPeriodSeconds: 1
+  log:
+    level: debug
+    output: file
+    file:
+      name: ./long-polling-client
+      extensionName: log
+      addDate: false
+    withCallerInfo: true
+
+socket:
+  address: :20000
+  log:
+    level: debug
+    output: file
+    file:
+      name: ./socket-client
+      extensionName: log
+      addDate: false
+    withCallerInfo: true
