@@ -1,107 +1,52 @@
 package main
 
 import (
-	"errors"
-	"flag"
-
-	"github.com/base-client/go/config"
-	"github.com/base-client/go/long-polling-client/log"
-	"github.com/common-library/go/command-line/flags"
+	"github.com/base-client/go/common/config"
+	"github.com/base-client/go/common/main_sub"
+	"github.com/common-library/go/log/slog"
 	long_polling "github.com/common-library/go/long-polling"
 )
 
-type Main struct {
-	longPollingClientConfig config.LongPollingClient
-}
-
-func (this *Main) initialize() error {
-	if err := this.parseFlag(); err != nil {
-		return err
-	} else if err := this.setConfig(); err != nil {
-		return err
-	} else {
-		log.Initialize(this.longPollingClientConfig)
-
-		return nil
-	}
-}
-
-func (this *Main) parseFlag() error {
-	flagInfos := []flags.FlagInfo{
-		{FlagName: "config_file", Usage: "config/SocketClient.config", DefaultValue: string("")},
-	}
-
-	if err := flags.Parse(flagInfos); err != nil {
-		flag.Usage()
-		return err
-	} else if flag.NFlag() != 1 {
-		flag.Usage()
-		return errors.New("invalid flag")
-	} else {
-		return nil
-	}
-}
-
-func (this *Main) setConfig() error {
-	fileName := flags.Get[string]("config_file")
-
-	if longPollingClientConfig, err := config.Get[config.LongPollingClient](fileName); err != nil {
-		return err
-	} else {
-		this.longPollingClientConfig = longPollingClientConfig
-		return nil
-	}
-}
-
-func (this *Main) subscription(category string) error {
-	request := long_polling.SubscriptionRequest{Category: category, TimeoutSeconds: 300, SinceTime: 1}
-	response, err := long_polling.Subscription("http://"+this.longPollingClientConfig.Address+this.longPollingClientConfig.SubscriptionURI, nil, request, "", "", nil)
-	if err != nil {
-		return err
-	}
-
-	log.Client.Info("subscription", "response", response)
-
-	return nil
-}
-
-func (this *Main) publish(category, data string) error {
-	request := long_polling.PublishRequest{Category: category, Data: data}
-	response, err := long_polling.Publish("http://"+this.longPollingClientConfig.Address+this.longPollingClientConfig.PublishURI, 10, nil, request, "", "", nil)
-	if err != nil {
-		return err
-	}
-
-	log.Client.Info("publish", "response", response)
-
-	return nil
-}
-
-func (this *Main) Run() error {
-	defer log.Client.Flush()
-
-	if err := this.initialize(); err != nil {
-		return err
-	}
-
-	log.Client.Info("process start")
-	defer log.Client.Info("process end")
-
-	const category = "category-1"
-	const data = "data-1"
-
-	if err := this.publish(category, data); err != nil {
-		return err
-	} else if err := this.subscription(category); err != nil {
-		return err
-	} else {
-		return nil
-	}
-}
-
 func main() {
-	if err := (&Main{}).Run(); err != nil {
-		log.Client.Error(err.Error())
-		log.Client.Flush()
+	job := func(log *slog.Log) error {
+		subscription := func(category string) error {
+			address := config.Get("longPolling.address").(string)
+			subscriptionURI := config.Get("longPolling.subscriptionURI").(string)
+
+			request := long_polling.SubscriptionRequest{Category: category, TimeoutSeconds: 300, SinceTime: 1}
+			if response, err := long_polling.Subscription("http://"+address+subscriptionURI, nil, request, "", "", nil); err != nil {
+				return err
+			} else {
+				log.Info("subscription", "response", response)
+
+				return nil
+			}
+		}
+
+		publish := func(category, data string) error {
+			address := config.Get("longPolling.address").(string)
+			publishURI := config.Get("longPolling.publishURI").(string)
+
+			request := long_polling.PublishRequest{Category: category, Data: data}
+			if response, err := long_polling.Publish("http://"+address+publishURI, 10, nil, request, "", "", nil); err != nil {
+				return err
+			} else {
+				log.Info("publish", "response", response)
+
+				return nil
+			}
+		}
+
+		const category = "category-1"
+		const data = "data-1"
+		if err := publish(category, data); err != nil {
+			return err
+		} else {
+			return subscription(category)
+		}
+	}
+
+	if err := (&main_sub.Main{}).RunWithSlog(main_sub.LongPolling, job); err != nil {
+		panic(err)
 	}
 }

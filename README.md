@@ -1,9 +1,10 @@
 # Base Client for Go
 
 ## Features
+ - cloudevents
  - grpc
  - http
- - long-polling
+ - long polling
  - socket
 
 <br/>
