@@ -9,21 +9,22 @@ import (
 
 	"github.com/base-client/go/common/config"
 	"github.com/common-library/go/file"
-	"github.com/common-library/go/http"
+	"github.com/common-library/go/http/mux"
 )
 
 func TestMain(t *testing.T) {
-	server := http.Server{}
-	server.RegisterHandlerFunc("/v1/test/{id}", func(responseWriter net_http.ResponseWriter, request *net_http.Request) {
+	server := mux.Server{}
+	server.RegisterHandlerFunc(net_http.MethodGet, "/v1/test/{id}", func(responseWriter net_http.ResponseWriter, request *net_http.Request) {
 		responseWriter.WriteHeader(net_http.StatusOK)
 		responseWriter.Write([]byte(`{"field_1":"value-1"}`))
-	}, net_http.MethodGet)
+	})
 
 	middlewareFunction := func(nextHandler net_http.Handler) net_http.Handler {
 		return net_http.HandlerFunc(func(responseWriter net_http.ResponseWriter, request *net_http.Request) {
 			nextHandler.ServeHTTP(responseWriter, request)
 		})
 	}
+	server.Use(middlewareFunction)
 
 	const configFile = "../common/config/config.yaml"
 
@@ -32,7 +33,7 @@ func TestMain(t *testing.T) {
 	}
 	defer file.Remove(config.Get("http.log.file.name").(string) + "." + config.Get("http.log.file.extensionName").(string))
 
-	if err := server.Start(config.Get("http.address").(string), func(err error) { t.Error(err) }, middlewareFunction); err != nil {
+	if err := server.Start(config.Get("http.address").(string), func(err error) { t.Error(err) }); err != nil {
 		t.Fatal(err)
 	}
 	time.Sleep(time.Duration(200) * time.Millisecond)

@@ -11,8 +11,6 @@ import (
 
 func main() {
 	job := func() error {
-		return nil
-
 		event := cloudevents.NewEvent()
 		event.SetID("id")
 		event.SetType("type")

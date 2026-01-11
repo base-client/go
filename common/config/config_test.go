@@ -47,7 +47,8 @@ func TestGet(t *testing.T) {
 		"longPolling.log.file.addDate":                          false,
 		"longPolling.log.withCallerInfo":                        true,
 
-		"socket.address":                ":20000",
+		"socket.tcp.address":            ":20000",
+		"socket.udp.address":            ":20001",
 		"socket.log.level":              "debug",
 		"socket.log.output":             "file",
 		"socket.log.file.name":          "./socket-client",

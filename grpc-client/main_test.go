@@ -23,7 +23,7 @@ func TestMain(t *testing.T) {
 	server := grpc.Server{}
 	go func() {
 		if err := server.Start(config.Get("gRPC.address").(string), &sample.Server{}); err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	}()
 	time.Sleep(100 * time.Millisecond)
