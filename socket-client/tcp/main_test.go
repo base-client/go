@@ -8,7 +8,7 @@ import (
 
 	"github.com/base-client/go/common/config"
 	"github.com/common-library/go/file"
-	"github.com/common-library/go/socket"
+	"github.com/common-library/go/socket/tcp"
 )
 
 type TestServer struct {
@@ -17,20 +17,19 @@ type TestServer struct {
 	Greeting         string
 	PrefixOfResponse string
 
-	server socket.Server
+	server tcp.Server
 }
 
-func (this *TestServer) Start(t *testing.T) {
-	this.Network = "tcp"
-	this.Address = config.Get("socket.address").(string)
-	this.Greeting = "greeting"
-	this.PrefixOfResponse = "[response] "
-
-	acceptSuccessFunc := func(client socket.Client) {
-		if writeLen, err := client.Write(this.Greeting); err != nil {
+func (ts *TestServer) Start(t *testing.T) {
+	ts.Network = "tcp"
+	ts.Address = config.Get("socket.tcp.address").(string)
+	ts.Greeting = "greeting"
+	ts.PrefixOfResponse = "[response] "
+	acceptSuccessFunc := func(client tcp.Client) {
+		if writeLen, err := client.Write(ts.Greeting); err != nil {
 			t.Fatal(err)
-		} else if writeLen != len(this.Greeting) {
-			t.Fatalf("invalid write - (%d)(%d)", writeLen, len(this.Greeting))
+		} else if writeLen != len(ts.Greeting) {
+			t.Fatalf("invalid write - (%d)(%d)", writeLen, len(ts.Greeting))
 		}
 
 		readData, err := client.Read(1024)
@@ -38,7 +37,7 @@ func (this *TestServer) Start(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		writeData := this.PrefixOfResponse + readData
+		writeData := ts.PrefixOfResponse + readData
 		if writeLen, err := client.Write(writeData); err != nil {
 			t.Fatal(err)
 		} else if writeLen != len(writeData) {
@@ -50,23 +49,23 @@ func (this *TestServer) Start(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := this.server.Start(this.Network, this.Address, 100, acceptSuccessFunc, acceptFailureFunc); err != nil {
+	if err := ts.server.Start(ts.Network, ts.Address, 100, acceptSuccessFunc, acceptFailureFunc); err != nil {
 		t.Fatal(err)
 	}
 
-	for this.server.GetCondition() == false {
+	for ts.server.GetCondition() == false {
 		time.Sleep(100 * time.Millisecond)
 	}
 }
 
-func (this *TestServer) Stop(t *testing.T) {
-	if err := this.server.Stop(); err != nil {
+func (ts *TestServer) Stop(t *testing.T) {
+	if err := ts.server.Stop(); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestMain(t *testing.T) {
-	const configFile = "../common/config/config.yaml"
+	const configFile = "../../common/config/config.yaml"
 
 	if err := config.Read(configFile); err != nil {
 		t.Fatal(err)

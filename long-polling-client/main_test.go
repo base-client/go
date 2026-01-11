@@ -16,7 +16,7 @@ type TestServer struct {
 	server long_polling.Server
 }
 
-func (this *TestServer) Start(t *testing.T) {
+func (ts *TestServer) Start(t *testing.T) {
 	serverInfo := long_polling.ServerInfo{
 		Address:                        config.Get("longPolling.address").(string),
 		TimeoutSeconds:                 3600,
@@ -27,15 +27,15 @@ func (this *TestServer) Start(t *testing.T) {
 
 	filePersistorInfo := long_polling.FilePersistorInfo{Use: false}
 
-	if err := this.server.Start(serverInfo, filePersistorInfo, func(err error) { t.Fatal(err) }); err != nil {
+	if err := ts.server.Start(serverInfo, filePersistorInfo, func(err error) { t.Fatal(err) }); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(time.Duration(200) * time.Millisecond)
 }
 
-func (this *TestServer) Stop(t *testing.T) {
-	if err := this.server.Stop(10); err != nil {
+func (ts *TestServer) Stop(t *testing.T) {
+	if err := ts.server.Stop(10); err != nil {
 		t.Fatal(err)
 	}
 }

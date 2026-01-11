@@ -4,15 +4,15 @@ import (
 	"github.com/base-client/go/common/config"
 	"github.com/base-client/go/common/main_sub"
 	"github.com/common-library/go/log/slog"
-	"github.com/common-library/go/socket"
+	"github.com/common-library/go/socket/tcp"
 )
 
 func main() {
 	job := func(log *slog.Log) error {
-		var client socket.Client
+		var client tcp.Client
 		defer client.Close()
 
-		if err := client.Connect("tcp", config.Get("socket.address").(string)); err != nil {
+		if err := client.Connect("tcp", config.Get("socket.tcp.address").(string)); err != nil {
 			return err
 		}
 

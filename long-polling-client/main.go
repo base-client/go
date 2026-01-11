@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/base-client/go/common/config"
 	"github.com/base-client/go/common/main_sub"
 	"github.com/common-library/go/log/slog"
@@ -28,7 +30,7 @@ func main() {
 			publishURI := config.Get("longPolling.publishURI").(string)
 
 			request := long_polling.PublishRequest{Category: category, Data: data}
-			if response, err := long_polling.Publish("http://"+address+publishURI, 10, nil, request, "", "", nil); err != nil {
+			if response, err := long_polling.Publish("http://"+address+publishURI, 10*time.Second, nil, request, "", "", nil); err != nil {
 				return err
 			} else {
 				log.Info("publish", "response", response)

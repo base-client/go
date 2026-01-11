@@ -43,7 +43,10 @@ longPolling:
     withCallerInfo: true
 
 socket:
-  address: :20000
+  tcp:
+    address: :20000
+  udp:
+    address: :20001
   log:
     level: debug
     output: file
