@@ -25,13 +25,15 @@ type Main struct {
 	clientKind ClientKind
 }
 
-func (this *Main) initialize(clientKind ClientKind) error {
-	if err := this.parseFlag(); err != nil {
+func (m *Main) initialize(clientKind ClientKind) error {
+	if err := m.parseFlag(); err != nil {
 		return err
 	} else if err := config.Read(flags.Get[string]("config-file")); err != nil {
 		return err
 	} else {
-		if clientKind != CloudEvents {
+		m.clientKind = clientKind
+
+		if m.clientKind != CloudEvents {
 			log.Initialize(string(clientKind))
 		}
 
@@ -39,7 +41,7 @@ func (this *Main) initialize(clientKind ClientKind) error {
 	}
 }
 
-func (this *Main) parseFlag() error {
+func (m *Main) parseFlag() error {
 	flagInfos := []flags.FlagInfo{
 		{FlagName: "config-file", Usage: "config/config.yaml", DefaultValue: string("")},
 	}
@@ -55,20 +57,20 @@ func (this *Main) parseFlag() error {
 	}
 }
 
-func (this *Main) RunWithKlog(clientKind ClientKind, job func() error) error {
+func (m *Main) RunWithKlog(clientKind ClientKind, job func() error) error {
 	defer klog.Flush()
 
-	if err := this.initialize(clientKind); err != nil {
+	if err := m.initialize(clientKind); err != nil {
 		return err
 	} else {
 		return job()
 	}
 }
 
-func (this *Main) RunWithSlog(clientKind ClientKind, job func(*slog.Log) error) error {
+func (m *Main) RunWithSlog(clientKind ClientKind, job func(*slog.Log) error) error {
 	defer log.Log.Flush()
 
-	if err := this.initialize(clientKind); err != nil {
+	if err := m.initialize(clientKind); err != nil {
 		return err
 	} else {
 		return job(&log.Log)
